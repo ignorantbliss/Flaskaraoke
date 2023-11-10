@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+.libassjs-canvas-parent
+{
+	position: absolute;
+}
+</style>
+<title>Karoke - [VIDEOTITLE]</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
+  <script src="subtitles-octopus.js"></script>
+<script>
+
+var captions = null;
+
+function Resize() {
+
+	$('.libassjs-canvas-parent').css('position','absolute');
+
+	var screenratio = window.innerWidth / window.innerHeight;
+	var targetratio = 16/9;
+	if (screenratio > targetratio)
+	{		
+		var vwidth = window.innerHeight * targetratio;
+		$('video').css('height',window.innerHeight);
+		$('video').css('width',vwidth);
+		$('video').css('left',(window.innerWidth - vwidth)/2);
+		$('video').css('top','0');
+		
+		$('.libassjs-canvas-parent').css('left',(window.innerWidth - vwidth)/2);
+		$('.libassjs-canvas-parent').css('top','0');
+				
+		//console.log("Fixed Height");
+	}
+	else
+	{		
+		var vheight = window.innerWidth / targetratio;
+		$('video').css('left','0')
+		$('video').css('width',window.innerWidth);
+		$('video').css('height',vheight);		
+		$('video').css('top',(window.innerHeight - vheight)/2);		
+				
+		$('.libassjs-canvas-parent').css('left',0);
+		$('.libassjs-canvas-parent').css('top',(window.innerHeight - vheight)/2);	
+		
+	}	
+}
+
+function StartVideo()
+{
+	
+}
+
+</script>
+</head>
+<body style="background-color: black; text-align: left;" onload="Resize();" onresize="Resize();">
+<div id="main" style="text-align: left;">
+  <video controls autoplay style="position: absolute;" onplay="StartVideo();">
+	<source src="/videos/[VIDEOFILE].mp4" type="video/mp4"/>
+  </video>
+  <audio id="vocals">
+	<source src="/videos/[VIDEOFILE].ogg" type="audio/ogg"/>
+  </audio>
+  <div class="controls" style="position: absolute; top: 10px; right: 10px;">
+	<a href="upgrade?name=[VIDEOFILE]">UPGRADE</a>
+  </div>
+</body>
+</html>

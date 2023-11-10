@@ -1,0 +1,1 @@
+D:\python310\scripts\flask --app karaokeservice run --host=0.0.0.0

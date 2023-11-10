@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Karaoke</title>
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+	<link href="css/mystyles.css" rel="stylesheet" type="text/css" />
+	<script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
+	<script>
+var updatetiming = 5000;
+var hadcontent = true;
+var searchtick = 0;
+
+function DoSearch() {
+	var track = $('#track').val();
+	var artist = $('#artist').val();
+	
+	if (artist == "")
+	{
+		$('.requestpopup .results').html("Please enter the name of the artist to continue");
+		return;		
+	}
+	
+	$('.requestpopup .results').html("Searching For Song...");
+	$.get('/findonline?track=' + track + "&artist=" + artist,function (d) {
+		var ht = "";
+		for(var x=0;x<d.length;x++)
+		{
+			ht += '<div class="searchres"><img src="' + d[x].thumb + '"/ class="preview"><span class="title">' + d[x].name + '</span></div>'
+		}
+		if (ht != "")
+		{
+			ht = '<input type="submit" value="Download Song"/><br/><br/>' + ht;
+		}
+		$('.requestpopup .results').html(ht);
+	});
+	
+}
+
+function UpdateSearch() {
+	if (searchtick != 0)
+	{
+		window.clearTimeout(searchtick);
+		searchtick = 0;		
+	}
+	searchtick = window.setTimeout("DoSearch();",1000);
+}
+	
+function UpdateQueue() {
+	$.get('/queue',function (d) {		
+		$('#playListBody').html(d);
+		if (d != "")
+		{
+			hadcontent = true;
+			updatetiming = 5000;
+		}
+		else
+		{
+			if (hadcontent == true)
+			{
+				$.get('/songs',function (d) {		
+					$('#songlist').html(d);		
+				});
+			}
+			hadcontent = false;
+			updatetiming = 30000;
+		}
+	});
+	
+	window.setTimeout("UpdateQueue();",updatetiming);
+}
+
+var songupdatetiming = 30000;
+	
+function UpdateSongs() {
+	$.get('/songs?sort=' + sortorder,function (d) {		
+		$('#songlist').html(d);		
+	});
+	
+	window.setTimeout("UpdateSongs();",songupdatetiming);
+}
+
+function Init() {
+	UpdateQueue();
+	window.setTimeout("UpdateSongs();",songupdatetiming);
+};	
+
+var sortorder = "artist";
+	</script>
+</head>
+<body onload="Init();">
+<div id="main">
+  <div id="header">    
+    <div id="header-Bottom">
+      <div id="logoBlock">
+		<a href="#" onclick="$('.requestpopup').toggle(500); return false;"><div class="requestbutton">
+			Make A Request
+		</div></a>
+        <h1>Karaoke</h1>        		
+      </div>
+      
+  </div>
+  <div id="mainCont" class="content row">
+	<div class="col-md-4">
+		<a class="sortorder" href="#" onclick="sortorder='artist'; UpdateSongs(); return false;">ARTIST</a>
+	</div>
+	<div class="col-md-4">		
+		<a class="sortorder" href="#" onclick="sortorder='title'; UpdateSongs(); return false;">TITLE</a>
+	</div>
+	<div class="col-md-4">		
+		<a class="sortorder" href="#" onclick="sortorder='new'; UpdateSongs(); return false;">NEW</a>
+	</div>
+    <div class="col-md-12">
+      <div class="content" id="songlist">
+		[SONGS]
+	  </div>	      
+    </div>        
+  </div>  
+  <div class="overlay" style="position: fixed; bottom: 10px; right: 10px; max-width: 300px; max-height: 200px;">        
+      <div id="playListBody">        
+        [QUEUE]        
+      </div>      
+  </div>
+</div>
+<div class="requestpopup" id="navblock">	
+		<form method="POST" action="searchsong">
+		<h3>Search For A Song</h3>
+			<input id="track" type="text" name="track" value="" placeholder="Song Title" style="width: 100%; margin-bottom: 0.2em;" onkeyup="UpdateSearch();"/><br/>
+			<input id="artist" type="text" name="artist" value="" placeholder="Artist" style="width: 100%; margin-bottom: 0.2em;" onkeyup="UpdateSearch();"/>
+			<div class="results">
+				
+			</div>
+			<input type="submit" value="Search" style="display: none;"/>
+		</form>    
+</div>
+</body>
+</html>

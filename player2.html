@@ -1,0 +1,351 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<style>
+.libassjs-canvas-parent
+{
+	position: absolute;
+}
+
+.controls a
+{
+   background-color: #222222;
+   border-radius: 5px;
+   padding: 5px;
+   color: white;
+   text-size: 10px;
+   font-weight: bold;
+   margin-left: 0.5em;
+}
+
+.navigation a
+{
+   background-color: #222222;
+   border-radius: 5px;
+   padding: 5px;
+   color: white;
+   text-size: 10px;
+   font-weight: bold;
+   margin-left: 0.5em;
+}
+
+.thinkering a
+{
+   background-color: #222222;
+   border-radius: 5px;
+   padding: 5px;
+   color: white;
+   text-size: 10px;
+   font-weight: bold;
+   margin-left: 1em;
+}
+
+.editcontrols a
+{
+   background-color: #222222;
+   border-radius: 5px;
+   padding: 5px;
+   color: white;
+   text-size: 10px;
+   font-weight: bold;
+   margin-left: 1em;
+}
+
+.title
+{
+	font-size: large;
+	position: absolute;
+	bottom: 20px;
+	left: 20px;
+	font-weight: bold;
+	color: white;
+}
+
+body
+{
+	font-family: Arial, Helvetica, sans-serif;
+	overflow: hidden;
+}
+</style>
+<title>Karoke - [VIDEOTITLE]</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
+  <script src="subtitles-octopus.js"></script>
+<script>
+
+var videlement = null;
+var audelement = null;
+
+var captions = null;
+var alyriclag = [LAOFFSET];
+
+function Resize() {
+
+	$('.libassjs-canvas-parent').css('position','absolute');
+	var limitwidth = window.innerWidth;
+	var limitheight = window.innerHeight;
+	try
+	{
+		if (window.outerWidth < limitwidth)
+			limitwidth = window.outerWidth;
+		if (window.outerHeight < limitheight)
+			limitheight = window.outerHeight;
+	}
+	catch
+	{
+	}	
+
+	var screenratio = limitwidth / limitheight;
+	var targetratio = 16/9;
+	if (screenratio > targetratio)
+	{		
+		var vwidth = limitheight * targetratio;
+		$('video').css('height',limitheight);
+		$('video').css('width',vwidth);
+		$('video').css('left',(limitwidth - vwidth)/2);
+		$('video').css('top','0');
+		
+		$('.libassjs-canvas-parent').css('left',(limitwidth - vwidth)/2);
+		$('.libassjs-canvas-parent').css('top','0');
+				
+		//console.log("Fixed Height");
+	}
+	else
+	{		
+		var vheight = limitwidth / targetratio;
+		$('video').css('left','0')
+		$('video').css('width',limitwidth);
+		$('video').css('height',vheight);		
+		$('video').css('top',(limitheight - vheight)/2);		
+				
+		$('.libassjs-canvas-parent').css('left',0);
+		$('.libassjs-canvas-parent').css('top',(limitheight - vheight)/2);	
+		
+	}	
+	$('#playback').html(limitwidth + " x " + limitheight);
+}
+
+var audioready = false;
+var videoready = false;
+var kickoff = false;
+
+function Playit()
+{
+	if ((audioready == true) && (videoready == true))
+	{
+		/*if (kickoff == false)
+		{
+			console.log("Audio and Video are Ready");
+			$('audio')[0].play();
+			$('video')[0].play();
+			$('audio')[0].volume = 0;
+			kickoff = true;
+		}*/		
+		
+		/*var vidt = $('video')[0].currentTime;
+		$('audio')[0].currentTime = vidt;	
+		$('audio')[0].play();	*/
+	}
+}
+
+function GoTime()
+{
+	$('audio').on('canplaythrough',function () {
+		audioready = true;
+		//Playit();
+	});
+	$('video').on('canplaythrough',function () {
+		videoready = true;
+		//Playit();
+	});
+	if (audelement == null)
+	{
+		videlement = document.querySelector('video');
+		audelement = document.querySelector('audio');
+	}
+	audelement.volume = 0;
+	audelement.play();	
+	window.setTimeout("Fadein();",4000);
+}
+
+function Fadein()
+{
+	$('.overlay').fadeOut(500);	
+	$('.track').delay(2000).fadeOut(500);
+	audelement.play();
+	videlement.play();	
+	UpdateMapping();
+}
+
+function StartVideo()
+{
+	if (captions == null)
+	{
+		videlement = document.querySelector('video');
+		audelement = document.querySelector('audio');
+		window.SubtitlesOctopusOnLoad = function () {
+			var options = {
+				video: $('video')[0],
+				subUrl: "/videos/[VIDEOFILE].ass",
+				fonts: ['/fonts/Arial.ttf', '/fonts/TimesNewRoman.ttf'],			
+				debug: true,
+				timeOffset: [OFFSET],
+				workerUrl: '/subtitles-octopus-worker.js'
+			};
+			window.octopusInstance = new SubtitlesOctopus(options); // You can experiment in console
+		};
+		if (SubtitlesOctopus) {
+			SubtitlesOctopusOnLoad();
+		}
+		captions = true;		
+	}
+	//UpdateMapping();	
+	//window.setTimeout("UpdateMapping();",1000);
+}
+
+function StopVideo()
+{	
+	audelement.pause();	
+	var vidt = $('video')[0].currentTime;
+	audelement.currentTime = videlement.currentTime + alyriclag;	
+}
+
+function UpdateMapping()
+{		
+	//$('audio')[0].pause();	
+	audelement.currentTime = videlement.currentTime - dynlyriclag;//alyriclag;	
+	audelement.play();//$('audio')[0].play();	
+	$('#playback').html((audelement.currentTime - videlement.currentTime) + " Second Offset");
+	console.log("Position: " + videlement.currentTime + " vs " + audelement.currentTime);
+	console.log("Duration: " + videlement.duration + " vs " + audelement.duration);
+}
+
+var dynlyriclag = 0;
+
+function Retell()
+{
+	if (videlement != null)
+	{
+		$('#playback').html(dynlyriclag);
+		window.setTimeout("Retell();",1000);
+		dynlyriclag = audelement.currentTime - videlement.currentTime;
+		if (Math.abs(dynlyriclag) < 0.05)
+		{
+			dynlyriclag = 0;
+		}
+		//audelement.currentTime = videlement.currentTime + alyriclag;	
+	}
+}
+
+window.setTimeout("Retell();",1000);
+
+function AudioOffset(adjust)
+{
+	if (adjust == null)
+	{
+		$.get('/audiooffset?set=0', function (d) {
+			alyriclag = parseFloat(d);
+			UpdateMapping();
+		});
+	}
+	else
+	{
+		$.get('/audiooffset?change=' + adjust, function (d) {
+			alyriclag = parseFloat(d);
+			UpdateMapping();
+		});
+	}
+}
+
+function NudgeTiming(tm)
+{
+	if (tm != undefined)
+	{
+		$.get('/timing?video=[VIDEOSCRIPT]&adjust=' + tm, function (d) {
+			window.location.href='/play?video=[VIDEOSCRIPT]';
+		});
+	}
+	else
+	{
+		$.get('/timing?video=[VIDEOSCRIPT]&timing=' + $('video')[0].currentTime, function (d) {
+			window.location.href='/play?video=[VIDEOSCRIPT]';
+		});
+	}
+}
+
+function UpdateVocals()
+{
+	var current = audelement.volume;
+	var newvolume = 0;
+	var newdesc = "NO VOCALS";
+	
+	if (current == 1)
+	{
+		newdesc = "NO VOCALS";
+		newvolume = 0;
+	}	
+	else
+	{
+		if (current == 0.4)
+		{
+			newdesc = "FULL";
+			newvolume = 1;
+		}	
+		else
+		{
+			newdesc = "LOW";
+			newvolume = 0.4;
+		}
+	}
+	$('#vocallink').html(newdesc);
+	audelement.volume = newvolume;	
+	
+	UpdateMapping();
+	
+}
+</script>
+</head>
+<body style="background-color: black; text-align: left;" onload="GoTime(); Resize(); " onresize="Resize();">
+<div id="main" style="text-align: left;">
+  <video preload="auto" controls style="position: absolute;" onplay="$('.overlay').fadeOut(250); StartVideo();" onpause="StopVideo();" onseeked="UpdateMapping();">
+	<source src="/videos/[VIDEOFILE].mp4" type="video/mp4"/>
+  </video>
+  <audio id="vocals" volume="0" preload="auto">
+	<source src="/videos/[VIDEOFILE].ogg" type="audio/ogg" onplay="UpdateMapping();"/>
+  </audio>
+  <div class="controls" style="position: absolute; top: 10px; right: 10px;">
+	<a id="vocallink" href="#" onclick="UpdateVocals(); return false;">NO VOCALS</a>
+  </div>
+  <div class="navigation" style="position: absolute; top: 10px; left: 10px;">
+	<a id="vocallink" href="/">BACK</a>
+  </div>  
+  <div class="thinkering" style="position: absolute; right: 10px; bottom: 10px;">
+	<a href="#" onclick="$('#editcontrols').toggle(500); return false;">Edit</a>	
+  </div>
+  <div id="editcontrols" class="editcontrols" style="display: none; position: absolute; bottom: 40px; right: 10px;">
+    
+	<a href="#" onclick="AudioOffset(null);return false;">VOCAL SYNC:</a>
+	<a href="#" onclick="AudioOffset(-0.2);return false;">&lt;&lt;</a>	
+	<a href="#" onclick="AudioOffset(-0.05);return false;">&lt;</a>	
+	<a href="#" onclick="AudioOffset(0.05);return false;">&gt;</a>
+	<a href="#" onclick="AudioOffset(0.2);return false;">&gt;&gt;</a>
+	<br/><br/><a href="#" onclick="return false;">SUBTITLES:</a>
+	<a href="#" onclick="NudgeTiming(-0.5);return false;">&lt;</a>	
+	<a href="#" onclick="NudgeTiming(0.5);return false;">&gt;</a>
+</div>
+<div id="playback" class="playback" style="display: block; position: absolute; bottom: 10px; left: 10px; color: white;">
+	
+</div>
+  <div class="overlay" id="overlay" style="display: block; position: absolute; width: 100%; height: 100%; left: 0px; top: 0px; right: 0px; bottom: 0px; background-color: black;">	
+  <div class="title">
+  [VIDEOTITLE]
+  </div>
+  </div>
+  
+  
+</body>
+</html>
